@@ -21,7 +21,8 @@ using System.Threading;
 
 namespace SharpCifs.Util.Sharpen
 {
-    public class SocketEx : Socket
+    public class 
+        SocketEx : Socket
     {
         private int _soTimeOut = -1;
 
@@ -125,26 +126,11 @@ namespace SharpCifs.Util.Sharpen
         {
             using (var evt = new ManualResetEventSlim(false))
             {
-                using (SocketAsyncEventArgs args = new SocketAsyncEventArgs
+
+                base.BeginSendTo(buffer, offset, length, SocketFlags.None, destination ?? RemoteEndPoint, new AsyncCallback(delegate { evt.Set(); }), this);
+                if (!evt.Wait(_soTimeOut))
                 {
-                    UserToken = this
-                })
-                {
-                    args.SetBuffer(buffer, offset, length);
-
-                    args.Completed += delegate
-                    {
-                        evt.Set();
-                    };
-
-                    args.RemoteEndPoint = destination ?? RemoteEndPoint;
-
-
-                    SendToAsync(args);
-                    if (!evt.Wait(_soTimeOut))
-                    {
-                        throw new TimeoutException("No data sent.");
-                    }
+                    throw new TimeoutException("No data sent.");
                 }
             }
         }
